@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up / Login</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+  
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+  
+    .container {
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 400px;
+      transition: all 0.3s ease-in-out;
+      animation: fadeIn 0.6s ease forwards;
+    }
+  
+    .container h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 2rem;
+      color: #333;
+    }
+  
+    .container input {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      border-radius: 0.6rem;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
+  
+    .container input:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+  
+    .container button {
+      width: 100%;
+      background-color: #667eea;
+      color: white;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+  
+    .container button:hover {
+      background-color: #5a67d8;
+    }
+  
+    .container p {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+  
+    .container a {
+      color: #667eea;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+  
+    .container a:hover {
+      color: #5a67d8;
+    }
+  
+    #message {
+      padding: 0.75rem;
+      font-size: 0.95rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      display: none;
+      margin-bottom: 1rem;
+      animation: fadeSlide 0.4s ease-in-out;
+    }
+  
+    #message.error {
+      background-color: #ffe0e0;
+      color: #e53e3e;
+      border: 1px solid #e53e3e;
+    }
+  
+    #message.success {
+      background-color: #e6fffa;
+      color: #2f855a;
+      border: 1px solid #38a169;
+    }
+  
+    @media (max-width: 480px) {
+      .container {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
+  
+      .container h2 {
+        font-size: 1.6rem;
+      }
+  
+      .container input,
+      .container button {
+        font-size: 0.95rem;
+        padding: 0.7rem;
+      }
+    }
+  
+    @keyframes fadeIn {
+      from {
+        transform: translateY(30px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0px);
+        opacity: 1;
+      }
+    }
+  
+    @keyframes fadeSlide {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0px);
+      }
+    }
+  </style>
+  
+</head>
+<body>
+
+  <div class="container">
+    <h2 id="formTitle">Sign Up</h2>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <p id="message" class="hidden-message"></p>
+    <button id="submitBtn">Sign Up</button>
+    <p>
+      <span id="toggleText">Already have an account?</span>
+      <a href="#" id="toggleMode">Login</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAe07bIIl1tm40cfk8KuWUDm1og0UUxhEg",
+      authDomain: "kanban-afdf7.firebaseapp.com",
+      projectId: "kanban-afdf7",
+      storageBucket: "kanban-afdf7.firebasestorage.app",
+      messagingSenderId: "315355408600",
+      appId: "1:315355408600:web:b5145c752557a18d610fad",
+      measurementId: "G-0FM81D7MGK"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    let isSignup = true;
+    const formTitle = document.getElementById("formTitle");
+    const submitBtn = document.getElementById("submitBtn");
+    const toggleText = document.getElementById("toggleText");
+    const toggleMode = document.getElementById("toggleMode");
+    const message = document.getElementById("message");
+
+    toggleMode.addEventListener("click", () => {
+      isSignup = !isSignup;
+      formTitle.textContent = isSignup ? "Sign Up" : "Login";
+      submitBtn.textContent = isSignup ? "Sign Up" : "Login";
+      toggleText.textContent = isSignup ? "Already have an account?" : "Don't have an account?";
+      toggleMode.textContent = isSignup ? "Login" : "Sign Up";
+      clearMessage();
+    });
+
+    submitBtn.addEventListener("click", () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        showMessage("Please fill out all fields.", "error");
+        return;
+      }
+
+      if (isSignup) {
+        createUserWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            showMessage("🎉 Signup successful! Redirecting...", "success");
+            setTimeout(() => window.location.href = "dashboard.html", 1000);
+          })
+          .catch(error => {
+            if (error.code === "auth/email-already-in-use") {
+              showMessage("This email is already in use. Try logging in.", "error");
+            } else if (error.code === "auth/invalid-email") {
+              showMessage("Invalid email format.", "error");
+            } else if (error.code === "auth/weak-password") {
+              showMessage("Password should be at least 6 characters.", "error");
+            } else {
+              showMessage("Signup error: " + error.message, "error");
+            }
+          });
+      } else {
+        signInWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            showMessage("✅ Login successful! Redirecting...", "success");
+            setTimeout(() => window.location.href = "dashboard.html", 1000);
+          })
+          .catch(error => {
+            if (error.code === "auth/user-not-found") {
+              showMessage("No user found with this email.", "error");
+            } else if (error.code === "auth/wrong-password") {
+              showMessage("Incorrect password. Try again.", "error");
+            } else if (error.code === "auth/invalid-email") {
+              showMessage("Invalid email format.", "error");
+            } else {
+              showMessage("Login error: " + error.message, "error");
+            }
+          });
+      }
+    });
+
+    function showMessage(text, type) {
+      message.classList.remove("hidden-message", "error", "success");
+      message.classList.add(type);
+      message.style.display = "block";
+      message.textContent = text;
+    }
+
+    function clearMessage() {
+      message.classList.remove("error", "success");
+      message.style.display = "none";
+      message.textContent = "";
+    }
+
+  </script>
+
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import { app } from "./firebase-config.js"; // Adjust path if needed
+
+    // const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "dashboard.html";
+      }
+    });
+  </script>
+
+</body>
+</html>
